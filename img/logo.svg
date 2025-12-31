@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background rounded rectangle -->
+  <rect x="5" y="15" width="190" height="70" rx="12" fill="rgba(99, 102, 241, 0.05)" 
+        stroke="url(#logoGradient)" stroke-width="2"/>
+  
+  <!-- Code tag style </TJ> -->
+  <g fill="url(#logoGradient)" filter="url(#glow)" font-family="'Courier New', monospace" font-weight="bold">
+    <!-- Opening bracket and slash -->
+    <text x="25" y="63" font-size="48">&lt;/</text>
+    
+    <!-- TJ Letters -->
+    <text x="80" y="63" font-size="48">TJ</text>
+    
+    <!-- Closing bracket -->
+    <text x="155" y="63" font-size="48">&gt;</text>
+  </g>
+  
+  <!-- Decorative code dots (like syntax highlighting) -->
+  <circle cx="170" cy="30" r="3" fill="#10b981" opacity="0.8"/>
+  <circle cx="180" cy="30" r="3" fill="#f59e0b" opacity="0.8"/>
+  <circle cx="190" cy="30" r="3" fill="#ef4444" opacity="0.8"/>
+</svg>
