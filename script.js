@@ -94,9 +94,9 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
-
 window.addEventListener('scroll', () => {
     const navbar = document.querySelector('.navbar');
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
     
     if (window.scrollY > 100) {
         if (currentTheme === 'light') {
