@@ -426,10 +426,6 @@ if (contactFormValidation) {
             e.preventDefault();
             return;
         }
-
-        btnText.style.display = 'none';
-        btnLoading.style.display = 'inline-block';
-        submitBtn.disabled = true;
     });
 }
-console.log('Portfolio loaded successfully! 🚀');}
+console.log('Portfolio loaded successfully! 🚀');
