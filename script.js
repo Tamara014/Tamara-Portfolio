@@ -428,4 +428,4 @@ if (contactFormValidation) {
         }
     });
 }
-console.log('Portfolio loaded successfully! 🚀');
+console.log('Portfolio loaded successfully! 🚀');}
