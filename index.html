@@ -1,416 +1,510 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tamara Jakovljevic - Portfolio</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <div class="scroll-progress" id="scroll-progress"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tamara Jakovljevic — Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="root"></div>
 
-    <nav class="navbar">
-        <div class="container">
-            <a href="#home" class="logo">
-                <img src="img/logo.svg" alt="Tamara Jakovljevic Logo" class="logo-img">
+    <!-- React & Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Framer Motion UMD build (exposes global `Motion`) -->
+    <script src="https://unpkg.com/framer-motion/dist/framer-motion.js"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect, useRef } = React;
+      const { motion, useScroll, useTransform, AnimatePresence } = Motion;
+
+      const easeCalm = [0.16, 1, 0.3, 1];
+
+      const ScrambleText = ({ text, className = "" }) => {
+        const [output, setOutput] = React.useState(() =>
+          text.split("").map((ch) => (ch === " " ? " " : ""))
+        );
+
+        React.useEffect(() => {
+          const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+          const finalChars = text.split("");
+          const timeouts = [];
+          const intervals = [];
+
+          finalChars.forEach((targetChar, index) => {
+            if (targetChar === " ") {
+              // Just place spaces without scrambling
+              setOutput((prev) => {
+                const next = [...prev];
+                next[index] = " ";
+                return next;
+              });
+              return;
+            }
+
+            const startDelay = index * 40; // stagger start per character
+            const iterations = 8;
+            const intervalMs = 28;
+
+            const timeoutId = setTimeout(() => {
+              let count = 0;
+              const intervalId = setInterval(() => {
+                if (count < iterations) {
+                  const randomChar = chars[Math.floor(Math.random() * chars.length)];
+                  setOutput((prev) => {
+                    const next = [...prev];
+                    next[index] = randomChar;
+                    return next;
+                  });
+                  count += 1;
+                } else {
+                  setOutput((prev) => {
+                    const next = [...prev];
+                    next[index] = targetChar;
+                    return next;
+                  });
+                  clearInterval(intervalId);
+                }
+              }, intervalMs);
+
+              intervals.push(intervalId);
+            }, startDelay);
+
+            timeouts.push(timeoutId);
+          });
+
+          return () => {
+            timeouts.forEach((id) => clearTimeout(id));
+            intervals.forEach((id) => clearInterval(id));
+          };
+        }, [text]);
+
+        return (
+          <motion.h1
+            className={className}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: easeCalm }}
+          >
+            {output.join("")}
+          </motion.h1>
+        );
+      };
+
+      const AnimatedText = ({ text, as = "h1", delay = 0, className = "" }) => {
+        const letters = Array.from(text);
+        const Tag = motion[as] || motion.span;
+
+        const container = {
+          hidden: {},
+          visible: {
+            transition: {
+              staggerChildren: 0.035,
+              delayChildren: delay,
+            },
+          },
+        };
+
+        const letter = {
+          hidden: { opacity: 0, y: "1.2em", scale: 1.02 },
+          visible: (i) => ({
+            opacity: 1,
+            y: "0em",
+            scale: 1,
+            transition: {
+              duration: 0.6,
+              ease: easeCalm,
+              delay: i * 0.005,
+            },
+          }),
+        };
+
+        return (
+          <Tag
+            className={className}
+            variants={container}
+            initial="hidden"
+            animate="visible"
+          >
+            {letters.map((char, i) => (
+              <motion.span
+                key={i + char}
+                style={{ display: "inline-block", whiteSpace: "pre" }}
+                variants={letter}
+                custom={i}
+              >
+                {char}
+              </motion.span>
+            ))}
+          </Tag>
+        );
+      };
+
+      const IntroLoader = () => (
+        <motion.div
+          className="loader-overlay"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, ease: easeCalm }}
+        >
+          <motion.div
+            className="loader-mark"
+            initial={{ scale: 0.9, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0 }}
+            transition={{ duration: 0.7, ease: easeCalm }}
+          >
+            <motion.img
+              src="img/TJ_logo.svg"
+              alt="Tamara Jakovljevic logo"
+              className="loader-logo"
+              initial={{ opacity: 0, clipPath: "inset(0 100% 0 0)" }}
+              animate={{ opacity: 1, clipPath: "inset(0 0% 0 0)" }}
+              transition={{ duration: 1.4, ease: "easeInOut", delay: 0.1 }}
+            />
+          </motion.div>
+          <motion.div
+            className="loader-text"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.7, ease: easeCalm, delay: 0.15 }}
+          >
+            <span>Data &amp; Software Engineer</span>
+          </motion.div>
+        </motion.div>
+      );
+
+      const Hero = () => {
+        const ref = useRef(null);
+        const { scrollYProgress } = useScroll({
+          target: ref,
+          offset: ["start start", "end center"],
+        });
+
+        const scale = useTransform(scrollYProgress, [0, 1], [1, 0.82]);
+        const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.25]);
+        const y = useTransform(scrollYProgress, [0, 1], ["0vh", "-8vh"]);
+
+        return (
+          <motion.section
+            ref={ref}
+            id="hero"
+            className="section hero"
+            style={{ scale, opacity, y }}
+          >
+            <motion.div
+              className="hero-pixel-field"
+              aria-hidden="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              transition={{ duration: 1.4, ease: easeCalm, delay: 0.3 }}
+            />
+            <div className="hero-inner">
+              <div className="hero-copy">
+                <ScrambleText text="Tamara Jakovljevic" className="hero-title" />
+                <AnimatedText
+                  as="h2"
+                  text="Data Engineer | Software Engineer"
+                  className="hero-subtitle"
+                  delay={0.4}
+                />
+                <motion.p
+                  className="hero-body"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, ease: easeCalm, delay: 0.9 }}
+                >
+                  Data & software engineer turning noisy production issues into
+                  clean, reliable systems. I like working close to data and
+                  shipping small tools that make teams faster.
+                </motion.p>
+
+                <motion.div
+                  className="hero-actions"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, ease: easeCalm, delay: 1.1 }}
+                >
+                  <a href="#work" className="btn btn-primary">View Projects</a>
+                  <a href="#contact" className="btn btn-secondary">Get in touch</a>
+                  <a
+                    href="https://github.com/Tamara014"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-ghost"
+                  >
+                    GitHub
+                  </a>
+                </motion.div>
+              </div>
+            </div>
+          </motion.section>
+        );
+      };
+
+      const SectionShell = ({ id, label, kicker, children }) => (
+        <motion.section
+          id={id}
+          className="section"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.35 }}
+          transition={{ duration: 0.7, ease: easeCalm }}
+        >
+          <div className="section-header">
+            <span className="section-kicker">{kicker}</span>
+            <h3 className="section-label">{label}</h3>
+          </div>
+          <div className="section-body">{children}</div>
+        </motion.section>
+      );
+
+      const About = () => (
+        <SectionShell id="about" label="About" kicker="Profile">
+          <div className="about-grid">
+            <p>
+              I work across data engineering and software development:
+              configuring systems, designing pipelines, integrating APIs and
+              supporting production environments. My recent roles span L1
+              support and implementation in the payments domain.
+            </p>
+            <div className="about-meta">
+              <div className="meta-block">
+                <span className="meta-label">Experience</span>
+                <span className="meta-value">
+                  Implementation Specialist at OpenWay • Junior Support Analyst at Comtrade
+                </span>
+              </div>
+              <div className="meta-block">
+                <span className="meta-label">Stack</span>
+                <span className="meta-value">
+                  Python, JavaScript, React, Java, SQL, Oracle, MS SQL Server,
+                  APIs, Git/GitHub, ServiceNow, JIRA, Power BI
+                </span>
+              </div>
+            </div>
+          </div>
+        </SectionShell>
+      );
+
+      const projects = [
+        {
+          title: "Weather Data Pipeline",
+          role: "Data Engineering",
+          description:
+            "Pipeline that fetches, cleans, transforms and stores weather data, with ETL workflows and automation in Python.",
+          url: "https://github.com/Tamara014/weather_data_pipeline",
+        },
+        {
+          title: "ySign Platform",
+          role: "Backend & Integrations",
+          description:
+            "Web application with user authentication, database integration and a front-end for managing signing workflows.",
+          url: "https://github.com/Tamara014/ySign-master",
+        },
+        {
+          title: "MoodTunes",
+          role: "Product & Full‑stack",
+          description:
+            "Minimal web app that curates playlists based on mood and energy levels using external music APIs.",
+          url: "https://github.com/Tamara014/MoodTunes",
+        },
+      ];
+
+      const Work = () => {
+        const sectionRef = useRef(null);
+        const { scrollYProgress } = useScroll({
+          target: sectionRef,
+          offset: ["start 80%", "end start"],
+        });
+
+        const [cursor, setCursor] = useState({ x: 0, y: 0, visible: false });
+
+        const titleScale = useTransform(scrollYProgress, [0, 1], [1.08, 0.85]);
+        const titleY = useTransform(scrollYProgress, [0, 1], [0, -40]);
+        const titleOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.4]);
+
+        const handleMouseMove = (event) => {
+          setCursor((prev) => ({
+            ...prev,
+            x: event.clientX,
+            y: event.clientY,
+          }));
+        };
+
+        return (
+          <SectionShell
+            id="work"
+            label="Selected Work"
+            kicker="Projects"
+          >
+            <div
+              ref={sectionRef}
+              className="work-shell"
+              onMouseMove={handleMouseMove}
+            >
+              <motion.div
+                className="work-title-wrap"
+                style={{ scale: titleScale, y: titleY, opacity: titleOpacity }}
+              >
+                <span className="work-kicker">A small set of things I built</span>
+                <h4 className="work-title">Systems that behave well under load.</h4>
+              </motion.div>
+
+              <div className="work-grid">
+                {projects.map((project, index) => (
+                  <motion.article
+                    key={project.title}
+                    className="project-card"
+                    initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, amount: 0.4 }}
+                    transition={{
+                      duration: 0.7,
+                      ease: easeCalm,
+                      delay: 0.12 * index,
+                    }}
+                    onMouseEnter={() =>
+                      project.url &&
+                      setCursor((prev) => ({ ...prev, visible: true }))
+                    }
+                    onMouseLeave={() =>
+                      setCursor((prev) => ({ ...prev, visible: false }))
+                    }
+                    onClick={() => {
+                      if (project.url) {
+                        window.open(project.url, "_blank", "noreferrer");
+                      }
+                    }}
+                    style={{ cursor: project.url ? "none" : "default" }}
+                  >
+                    <div className="project-meta">
+                      <span className="project-role">{project.role}</span>
+                    </div>
+                    <h5 className="project-title">{project.title}</h5>
+                    <p className="project-description">{project.description}</p>
+                  </motion.article>
+                ))}
+              </div>
+            </div>
+            <motion.div
+              className="cursor-hint"
+              animate={{
+                x: cursor.x,
+                y: cursor.y,
+                opacity: cursor.visible ? 1 : 0,
+                scale: cursor.visible ? 1 : 0.7,
+              }}
+              transition={{ type: "spring", stiffness: 260, damping: 26, mass: 0.4 }}
+            >
+              <span>Open repo</span>
+            </motion.div>
+          </SectionShell>
+        );
+      };
+
+      const Contact = () => (
+        <SectionShell id="contact" label="Contact" kicker="Next step">
+          <motion.div
+            className="contact-shell"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.7, ease: easeCalm }}
+          >
+            <p>
+              Ready to talk about data platforms, engineering culture, or a new
+              role? A short, focused call is usually the best place to start.
+              Based in Serbia, open to remote and hybrid opportunities.
+              You can also explore more of my work on GitHub.
+            </p>
+            <div className="contact-actions">
+              <a href="mailto:tjakovljevic09@gmail.com" className="btn btn-primary">
+                Email me
+              </a>
+              <a
+                href="https://github.com/Tamara014"
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-ghost"
+              >
+                GitHub
+              </a>
+            </div>
+          </motion.div>
+        </SectionShell>
+      );
+
+      const Nav = () => {
+        const [scrolled, setScrolled] = useState(false);
+
+        useEffect(() => {
+          const onScroll = () => {
+            setScrolled(window.scrollY > 24);
+          };
+          window.addEventListener("scroll", onScroll);
+          return () => window.removeEventListener("scroll", onScroll);
+        }, []);
+
+        return (
+          <motion.header
+            className={"nav " + (scrolled ? "nav--scrolled" : "")}
+            initial={{ y: -40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, ease: easeCalm }}
+          >
+            <a href="#hero" className="nav-logo">
+              <img
+                src="img/TJ_logo.svg"
+                alt="Tamara Jakovljevic logo"
+                className="nav-logo-img"
+              />
             </a>
-            <ul class="nav-menu">
-                <li><a href="#home" class="nav-link">Home</a></li>
-                <li><a href="#about" class="nav-link">About</a></li>
-                <li><a href="#experience" class="nav-link">Experience</a></li>
-                <li><a href="#skills" class="nav-link">Skills</a></li>
-                <li><a href="#projects" class="nav-link">Projects</a></li>
-                <li><a href="#education" class="nav-link">Education</a></li>
-                <li><a href="#contact" class="nav-link">Contact</a></li>
-            </ul>
-            <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
-                <i class="fas fa-moon"></i>
-            </button>
-            <div class="hamburger">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-    </nav>
+            <nav className="nav-links">
+              <a href="#about">About</a>
+              <a href="#work">Work</a>
+              <a href="#contact">Contact</a>
+            </nav>
+          </motion.header>
+        );
+      };
 
+      const App = () => {
+        const [showLoader, setShowLoader] = useState(true);
 
-    <section id="home" class="hero">
+        useEffect(() => {
+          const timeout = setTimeout(() => setShowLoader(false), 1700);
+          return () => clearTimeout(timeout);
+        }, []);
 
-        <canvas id="particles-canvas" class="particles-canvas"></canvas>
-        <div class="hero-content">
-            <h1 class="hero-title">Hi, I'm <span class="gradient-text">Tamara Jakovljevic</span></h1>
-            <p class="hero-subtitle">Data Engineer | Software Engineer</p>
-            <p class="hero-description">Motivated Software Engineer with experience in L1 support, database management, and software development. Passionate about leveraging technical expertise to design and implement efficient solutions.</p>
-            <div class="hero-buttons">
-                <a href="#contact" class="btn btn-primary">Get In Touch</a>
-                <a href="#experience" class="btn btn-secondary">View My Work</a>
-                <a href="Tamara Jakovljevic Resume.pdf" download class="btn btn-download">
-                    <i class="fas fa-download"></i> Download Resume
-                </a>
-            </div>
-            <div class="social-links">
-                <a href="mailto:tjakovljevic09@gmail.com" target="_blank"><i class="fas fa-envelope"></i></a>
-                <a href="https://www.linkedin.com/in/tamara-jakovljevic-219203275" target="_blank"><i class="fab fa-linkedin"></i></a>
-                <a href="https://github.com/Tamara014" target="_blank"><i class="fab fa-github"></i></a>
-            </div>
-        </div>
-        <div class="scroll-indicator">
-            <div class="mouse"></div>
-        </div>
-    </section>
+        return (
+          <div className="page">
+            <AnimatePresence>{showLoader && <IntroLoader />}</AnimatePresence>
+            <Nav />
+            <Hero />
+            <main>
+              <About />
+              <Work />
+              <Contact />
+            </main>
+          </div>
+        );
+      };
 
-    <section id="about" class="about">
-        <div class="container">
-            <h2 class="section-title">About Me</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <p>I'm a motivated and hands-on Software Engineer with experience in L1 support and a solid foundation in IT. Skilled in database management, software development, and technical troubleshooting, I'm passionate about leveraging technical expertise to design and implement efficient solutions.</p>
-                    <p>My journey in technology has equipped me with a strong foundation in Python, JavaScript, SQL, and modern web technologies. I'm a strong communicator and team player with a focus on delivering impactful results in collaborative environments. Currently pursuing my degree in Information Technology while gaining practical experience in the industry.</p>
-                    <div class="about-stats">
-                        <div class="stat-item">
-                            <h3>1+</h3>
-                            <p>Years Experience</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>2</h3>
-                            <p>Major Projects</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>12+</h3>
-                            <p>Technologies</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="experience" class="experience">
-        <div class="container">
-            <h2 class="section-title">Work Experience</h2>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-date">Jul 2025 - Sep 2025</div>
-                        <h3>Implementation Specialist</h3>
-                        <h4>OpenWay</h4>
-                        <ul>
-                            <li>Configured and supported WAY4 systems for banking clients</li>
-                            <li>Customized and troubleshooted payment solutions using SQL and Oracle</li>
-                            <li>Tracked tasks using JIRA and accessed client environments via Remote Desktop</li>
-                            <li>Assisted with system integration, testing, and deployment of solutions</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-date">Sep 2024 - Jun 2025</div>
-                        <h3>Junior Support Analyst L1</h3>
-                        <h4>Comtrade System Integration</h4>
-                        <ul>
-                            <li>Diagnosed and resolved software and hardware issues for clients</li>
-                            <li>Managed tickets in ServiceNow and escalated complex issues to senior teams</li>
-                            <li>Collaborated with technical teams to optimize processes and resolve technical problems</li>
-                            <li>Provided exceptional customer service and technical support</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-date">May 2022 - Oct 2024</div>
-                        <h3>Waiter / Bartender</h3>
-                        <h4>Republic Cafe</h4>
-                        <ul>
-                            <li>Managed orders and POS systems efficiently in a fast-paced environment</li>
-                            <li>Developed strong multitasking and communication skills</li>
-                            <li>Demonstrated excellent teamwork and customer service abilities</li>
-                            <li>Maintained high standards of service quality under pressure</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="skills" class="skills">
-        <div class="container">
-            <h2 class="section-title">Skills & Technologies</h2>
-            <div class="skills-grid">
-                <div class="skill-category">
-                    <h3><i class="fas fa-code"></i> Programming & Web</h3>
-                    <div class="skill-items">
-                        <div class="skill-item">
-                            <span class="skill-name">Python</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 85%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">JavaScript</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 80%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">SQL</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 85%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">HTML5 & CSS3 & React</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 80%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="skill-category">
-                    <h3><i class="fas fa-database"></i> Databases & Cloud</h3>
-                    <div class="skill-items">
-                        <div class="skill-item">
-                            <span class="skill-name">Oracle</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 80%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">Microsoft SQL Server</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 80%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">Azure (basics)</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 65%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">Relational Databases</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 85%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="skill-category">
-                    <h3><i class="fas fa-tools"></i> ETL & Dev Tools</h3>
-                    <div class="skill-items">
-                        <div class="skill-item">
-                            <span class="skill-name">API Integration</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 80%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">Power BI & Excel</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 75%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">Git & GitHub</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 85%"></div>
-                            </div>
-                        </div>
-                        <div class="skill-item">
-                            <span class="skill-name">ServiceNow & JIRA</span>
-                            <div class="skill-bar">
-                                <div class="skill-progress" style="width: 80%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tech-stack">
-                <h3>Tech Stack</h3>
-                <div class="tech-icons">
-                    <div class="tech-icon"><i class="fab fa-python"></i><span>Python</span></div>
-                    <div class="tech-icon"><i class="fab fa-js"></i><span>JavaScript</span></div>
-                    <div class="tech-icon"><i class="fab fa-java"></i><span>Java</span></div>
-                    <div class="tech-icon"><i class="fas fa-database"></i><span>SQL</span></div>
-                    <div class="tech-icon"><i class="fab fa-react"></i><span>React</span></div>
-                    <div class="tech-icon"><i class="fab fa-git-alt"></i><span>Git</span></div>
-                    <div class="tech-icon"><i class="fab fa-microsoft"></i><span>Azure</span></div>
-                    <div class="tech-icon"><i class="fas fa-chart-bar"></i><span>Power BI</span></div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="projects" class="projects">
-        <div class="container">
-            <h2 class="section-title">Featured Projects</h2>
-            <div class="projects-grid">
-                <div class="project-card">
-                    <div class="project-icon">
-                        <i class="fas fa-cloud-sun"></i>
-                    </div>
-                    <h3>Weather Data Pipeline</h3>
-                    <p>Built a comprehensive data pipeline to fetch, clean, transform, and store weather data. Implemented ETL processes and automated workflows using Python.</p>
-                    <div class="project-tags">
-                        <span class="tag">Python</span>
-                        <span class="tag">ETL</span>
-                        <span class="tag">Data Pipeline</span>
-                        <span class="tag">Automation</span>
-                    </div>
-                    <a href="https://github.com/Tamara014/weather_data_pipeline" target="_blank" class="project-link">
-                        <i class="fab fa-github"></i> View on GitHub
-                    </a>
-                </div>
-                
-                <div class="project-card">
-                    <div class="project-icon">
-                        <i class="fas fa-signature"></i>
-                    </div>
-                    <h3>ySign Web Application</h3>
-                    <p>Developed a full-stack web application with user authentication, database integration, and intuitive front-end interface. Focused on data management, API integration, and workflow optimization.</p>
-                    <div class="project-tags">
-                        <span class="tag">JavaScript</span>
-                        <span class="tag">Web App</span>
-                        <span class="tag">Database</span>
-                        <span class="tag">API</span>
-                    </div>
-                    <a href="https://github.com/Tamara014/ySign-master" target="_blank" class="project-link">
-                        <i class="fab fa-github"></i> View on GitHub
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="education" class="education">
-        <div class="container">
-            <h2 class="section-title">Education</h2>
-            <div class="education-grid">
-                <div class="education-item">
-                    <div class="education-icon">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                    <h3>Bachelor's Degree in Information Technology</h3>
-                    <h4>Faculty of Technical Sciences, Čačak</h4>
-                    <p class="education-date">2020 - Present</p>
-                    <p>Currently pursuing degree in Information Technology with focus on software engineering, databases, and modern development practices</p>
-                </div>
-                <div class="education-item">
-                    <div class="education-icon">
-                        <i class="fas fa-school"></i>
-                    </div>
-                    <h3>High School Diploma in Food Technology</h3>
-                    <h4>High School of Food and Hospitality</h4>
-                    <p class="education-date">2016 - 2020</p>
-                    <p>Completed secondary education with focus on food technology and hospitality management</p>
-                </div>
-                <div class="education-item">
-                    <div class="education-icon">
-                        <i class="fas fa-project-diagram"></i>
-                    </div>
-                    <h3>Notable Projects</h3>
-                    <h4>Personal Development</h4>
-                    <p class="education-date">2024 - Present</p>
-                    <ul>
-                        <li>Weather Data Pipeline (Python, ETL)</li>
-                        <li>ySign Web Application</li>
-                        <li>Database Management Projects</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="contact" class="contact">
-        <div class="container">
-            <h2 class="section-title">Get In Touch</h2>
-            <p class="section-subtitle">Have a project in mind? Let's work together!</p>
-            
-            <div class="contact-content">
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <h4>Email</h4>
-                            <p>tjakovljevic09@gmail.com</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-phone"></i>
-                        <div>
-                            <h4>Phone</h4>
-                            <p>+381 64 525 94 30</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            <h4>Location</h4>
-                            <p>Serbia</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fab fa-github"></i>
-                        <div>
-                            <h4>GitHub</h4>
-                            <p><a href="https://github.com/Tamara014" target="_blank" style="color: var(--primary-color);">github.com/Tamara014</a></p>
-                        </div>
-                    </div>
-                </div>
-
-                <form class="contact-form" id="contact-form-validation" action="https://formsubmit.co/tjakovljevic09@gmail.com" method="POST">
-                    <input type="hidden" name="_subject" value="Nova poruka sa portfolia!">
-                    <input type="hidden" name="_captcha" value="false">
-                    <input type="hidden" name="_template" value="table">
-                    <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
-                    
-                    <div class="form-group">
-                        <input type="text" name="name" id="form-name" placeholder="Your Name" required>
-                        <span class="form-error" id="name-error"></span>
-                    </div>
-                    <div class="form-group">
-                        <input type="email" name="email" id="form-email" placeholder="Your Email" required>
-                        <span class="form-error" id="email-error"></span>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" name="subject" id="form-subject" placeholder="Subject" required>
-                        <span class="form-error" id="subject-error"></span>
-                    </div>
-                    <div class="form-group">
-                        <textarea rows="5" name="message" id="form-message" placeholder="Your Message" required></textarea>
-                        <span class="form-error" id="message-error"></span>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="form-submit-btn">
-                        <span class="btn-text">Send Message</span>
-                        <span class="btn-loading" style="display:none;"><i class="fas fa-spinner fa-spin"></i> Sending...</span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 Tamara Jakovljevic. All rights reserved.</p>
-            <div class="footer-links">
-                <a href="mailto:tjakovljevic09@gmail.com"><i class="fas fa-envelope"></i></a>
-                <a href="https://www.linkedin.com/in/tamara-jakovljevic-219203275" target="_blank"><i class="fab fa-linkedin"></i></a>
-                <a href="https://github.com/Tamara014" target="_blank"><i class="fab fa-github"></i></a>
-            </div>
-        </div>
-    </footer>
-
-    <button id="back-to-top" class="back-to-top" aria-label="Back to top">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-
-    <script src="script.js"></script>
-</body>
+      const rootEl = document.getElementById("root");
+      const root = ReactDOM.createRoot(rootEl);
+      root.render(<App />);
+    </script>
+  </body>
 </html>
